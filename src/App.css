@@ -1,0 +1,60 @@
+/* src/App.css */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background: linear-gradient(135deg, #6e8efb, #a777e3); /* Beautiful gradient */
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+.container {
+  background: rgba(255, 255, 255, 0.9); /* Semi-transparent white overlay */
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px; /* Adjust as needed */
+  backdrop-filter: blur(10px); /* Glassy effect */
+}
+
+/* In <style> or CSS file */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.background {
+  background: linear-gradient(135deg, #f8f9ff, #e8f4f8, #d1ecf1, #f8f9ff);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 1rem;
+    max-width: 90%;
+  }
+}
+
+/* Ensure text is readable */
+h4, p, input, button {
+  color: #333;
+}
+
+/* Optional: Customize further */
+.login-container, .dashboard-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Carbon fiber texture for specific elements */
+.texture-background {
+  background: url('/path/to/carbon-fiber-texture.png'); /* Add your carbon fiber texture image */
+  background-size: cover;
+  opacity: 0.1; /* Adjust as needed */
+}
