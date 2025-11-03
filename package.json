@@ -22,6 +22,7 @@
     "react-scripts": "5.0.1",
     "react-toastify": "^11.0.5",
     "recharts": "^3.3.0",
+    "sharp": "^0.34.4",
     "socket.io-client": "^4.8.1",
     "web-vitals": "^2.1.4"
   },
@@ -50,6 +51,9 @@
     ]
   },
   "devDependencies": {
-    "babel-plugin-transform-remove-console": "^6.9.4"
+    "babel-plugin-transform-remove-console": "^6.9.4",
+    "eslint": "^8.57.1",
+    "eslint-config-react-app": "^7.0.1"
   }
+  
 }
