@@ -29,6 +29,24 @@ function App() {
       });
       setSocket(newSocket);
 
+      function App() {
+  const [user, setUser] = useState(null);
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/login" element={<Login setUser={setUser} />} />
+        <Route
+          path="/support-dashboard"
+          element={user ? <SupportDashboard user={user} setUser={setUser} /> : <Navigate to="/login" />}
+        />
+      </Routes>
+    </Router>
+  );
+}
+
+
       // Listen for live updates from the server
       newSocket.on('update', (data) => {
         // Handle the update data (e.g., update state, show notifications)

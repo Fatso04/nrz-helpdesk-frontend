@@ -25,8 +25,11 @@ import { Edit, Delete, Visibility, Search } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE from '../api/config';               // <-- NEW
 
-// MOVE HELPER FUNCTIONS TO TOP
+/* -------------------------------------------------
+   Helper functions (unchanged – moved to top)
+------------------------------------------------- */
 const getCreatorName = (ticket) => {
   const possible = [
     ticket.createdBy?.name,
@@ -77,20 +80,24 @@ const getPriorityColor = (priority) => {
   }
 };
 
+/* -------------------------------------------------
+   TicketTable Component
+------------------------------------------------- */
 const TicketTable = ({ tickets, user, setTickets, socket }) => {
   const navigate = useNavigate();
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
-  const rowsPerPage = 15;
+  const rowsPerPage = 10;
+  const [deleting, setDeleting] = useState(null);
 
-  // RESET PAGE ON FILTER CHANGE
+  // Reset page when filters change
   useEffect(() => {
     setPage(0);
   }, [search, statusFilter, priorityFilter, tickets.length]);
 
-  // FILTERED + SEARCHED TICKETS
+  // Filtered + searched tickets
   const filteredTickets = useMemo(() => {
     return tickets.filter(ticket => {
       const matchesSearch =
@@ -106,7 +113,7 @@ const TicketTable = ({ tickets, user, setTickets, socket }) => {
     });
   }, [tickets, search, statusFilter, priorityFilter]);
 
-  // PAGINATED
+  // Paginated view
   const paginatedTickets = useMemo(() => {
     return filteredTickets.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
   }, [filteredTickets, page]);
@@ -115,14 +122,13 @@ const TicketTable = ({ tickets, user, setTickets, socket }) => {
     setPage(newPage);
   };
 
-  const [deleting, setDeleting] = useState(null);
-
+  /* ---------- DELETE TICKET ---------- */
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this ticket?')) return;
 
     setDeleting(id);
     try {
-      await axios.delete(`http://localhost:5000/api/tickets/${id}`, {
+      await axios.delete(`${API_BASE}/api/tickets/${id}`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 
@@ -138,6 +144,7 @@ const TicketTable = ({ tickets, user, setTickets, socket }) => {
     }
   };
 
+  /* ---------- RENDER ---------- */
   return (
     <Box sx={{ mt: 6 }}>
       <Typography
@@ -326,7 +333,7 @@ const TicketTable = ({ tickets, user, setTickets, socket }) => {
           page={page}
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
-          rowsPerPageOptions={[15]}
+          rowsPerPageOptions={[10]}
           labelRowsPerPage="Tickets per page:"
           labelDisplayedRows={({ from, to, count }) => `${from}–${to} of ${count}`}
           sx={{

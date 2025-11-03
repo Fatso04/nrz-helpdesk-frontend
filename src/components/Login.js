@@ -1,7 +1,7 @@
 // src/components/Login.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import API from '../api/axios';                     // <-- configured axios
 import {
   Box,
   Button,
@@ -13,43 +13,59 @@ import {
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+
+
+
+
+
 const Login = ({ setUser }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', {
-        email,
-        password,
-      });
-
-      const userData = {
-        _id: res.data._id,
-        name: res.data.name,
-        email: res.data.email,
-        role: res.data.role,
-        token: res.data.token,
-      };
-
-      // SAVE TO localStorage
-      localStorage.setItem('user', JSON.stringify(userData));
-
-      // UPDATE APP STATE
-      setUser(userData);
-
-      toast.success('Login successful!');
+  // OPTIONAL: auto-fill token from localStorage on page load
+  useEffect(() => {
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      setUser(parsed);
       navigate('/dashboard');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
-      toast.error('Login failed');
     }
-  };
+  }, [setUser, navigate]);
+
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+
+  try {
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    const res = await axios.post(`${API_URL}/api/auth/support-login`, {
+      email,
+      password,
+    });
+
+    const userData = {
+      _id: res.data._id,
+      name: res.data.name,
+      email: res.data.email,
+      role: res.data.role,
+      token: res.data.token,
+    };
+
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+
+    toast.success('Login successful!');
+    navigate('/dashboard');
+  } catch (err) {
+    setError(err.response?.data?.message || 'Login failed');
+    toast.error('Login failed');
+  }
+};
+
+ 
 
   return (
     <Box
@@ -66,7 +82,11 @@ const Login = ({ setUser }) => {
           NRZ Helpdesk
         </Typography>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
         <form onSubmit={handleSubmit}>
           <TextField
@@ -77,6 +97,7 @@ const Login = ({ setUser }) => {
             onChange={(e) => setEmail(e.target.value)}
             margin="normal"
             required
+            placeholder="frubengo@nrz.co.za"
           />
           <TextField
             fullWidth
@@ -99,7 +120,7 @@ const Login = ({ setUser }) => {
         </form>
       </Paper>
 
-      <ToastContainer />
+      <ToastContainer position="top-right" autoClose={3000} />
     </Box>
   );
 };

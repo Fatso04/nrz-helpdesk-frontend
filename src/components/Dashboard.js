@@ -1,3 +1,4 @@
+// src/pages/Dashboard.js   (or wherever you keep it)
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -17,10 +18,13 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, T
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { motion } from 'framer-motion';
 import TicketTable from './TicketTable';
+import API_BASE from '../api/config';               // <-- NEW
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
-// Animated Background (optional — keep if you like)
+/* -------------------------------------------------
+   Animated Background (unchanged – you can keep it)
+------------------------------------------------- */
 const AnimatedBackground = () => {
   const [gradient, setGradient] = useState(0);
   useEffect(() => {
@@ -44,6 +48,9 @@ const AnimatedBackground = () => {
   );
 };
 
+/* -------------------------------------------------
+   Stat Card (unchanged)
+------------------------------------------------- */
 const ExecutiveStatCard = ({ title, value, subtitle, color, trend, isPositive }) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
     <Card sx={{
@@ -69,12 +76,15 @@ const ExecutiveStatCard = ({ title, value, subtitle, color, trend, isPositive })
   </motion.div>
 );
 
+/* -------------------------------------------------
+   Dashboard Component
+------------------------------------------------- */
 const Dashboard = ({ user, socket, setUser }) => {
   const [tickets, setTickets] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const navigate = useNavigate();
 
-  // FETCH TICKETS ONCE
+  /* ---------- FETCH TICKETS ---------- */
   useEffect(() => {
     if (!user?.token) {
       navigate('/login');
@@ -84,7 +94,7 @@ const Dashboard = ({ user, socket, setUser }) => {
     const fetchTickets = async () => {
       try {
         const endpoint = user.role === 'admin' ? '/api/tickets' : '/api/tickets/my-tickets';
-        const { data } = await axios.get(`http://localhost:5000${endpoint}`, {
+        const { data } = await axios.get(`${API_BASE}${endpoint}`, {
           headers: { Authorization: `Bearer ${user.token}` },
         });
         setTickets(data);
@@ -93,20 +103,22 @@ const Dashboard = ({ user, socket, setUser }) => {
           localStorage.removeItem('user');
           setUser(null);
           navigate('/login');
+        } else {
+          setSnackbar({ open: true, message: err.response?.data?.message || 'Failed to load tickets', severity: 'error' });
         }
       }
     };
     fetchTickets();
   }, [user, navigate, setUser]);
 
-  // SINGLE SOCKET LISTENER — PERMANENT FIX
+  /* ---------- SOCKET LISTENERS ---------- */
   useEffect(() => {
     if (!socket?.connected) return;
 
     const handleNew = (populatedTicket) => {
       setTickets(prev => {
         if (prev.some(t => t._id === populatedTicket._id)) return prev;
-        return [populatedTicket, ...prev]; // Always at top
+        return [populatedTicket, ...prev];
       });
     };
 
@@ -119,16 +131,14 @@ const Dashboard = ({ user, socket, setUser }) => {
     };
 
     const handleConnect = () => setSnackbar({ open: true, message: 'Live sync active', severity: 'success' });
-    const handleError = () => setSnackbar({ open: true, message: 'Sync offline', severity: 'warning' });
+    const handleError   = () => setSnackbar({ open: true, message: 'Sync offline', severity: 'warning' });
 
-    // Attach
     socket.on('connect', handleConnect);
     socket.on('connect_error', handleError);
     socket.on('new-ticket', handleNew);
     socket.on('ticket-updated', handleUpdate);
     socket.on('ticket-deleted', handleDelete);
 
-    // Cleanup
     return () => {
       socket.off('connect', handleConnect);
       socket.off('connect_error', handleError);
@@ -138,28 +148,24 @@ const Dashboard = ({ user, socket, setUser }) => {
     };
   }, [socket]);
 
-  // STATS
+  /* ---------- STATS ---------- */
   const stats = useMemo(() => {
-    const open = tickets.filter(t => t.status === 'open').length;
-    const inProgress = tickets.filter(t => t.status === 'in-progress').length;
-    const closed = tickets.filter(t => t.status === 'closed').length;
-    const urgent = tickets.filter(t => t.priority === 'high').length;
-    const total = tickets.length;
+    const open        = tickets.filter(t => t.status === 'open').length;
+    const inProgress  = tickets.filter(t => t.status === 'in-progress').length;
+    const closed      = tickets.filter(t => t.status === 'closed').length;
+    const urgent      = tickets.filter(t => t.priority === 'high').length;
+    const total       = tickets.length;
     const resolutionRate = total > 0 ? ((closed / total) * 100).toFixed(1) : 0;
     return { open, inProgress, closed, urgent, total, resolutionRate };
   }, [tickets]);
 
-  // BAR CHART — MATCHES TICKETTABLE STATUS COLORS
+  /* ---------- CHARTS (unchanged) ---------- */
   const barData = {
     labels: ['Open', 'In-Progress', 'Closed'],
     datasets: [{
       label: 'Tickets',
       data: [stats.open, stats.inProgress, stats.closed],
-      backgroundColor: [
-        '#0288d1',  // Open → Ocean Blue
-        '#5c6bc0',  // In-Progress → Indigo
-        '#2e7d32'   // Closed → Deep Green
-      ],
+      backgroundColor: ['#0288d1', '#5c6bc0', '#2e7d32'],
       borderColor: '#fff',
       borderWidth: 1,
       borderRadius: 8,
@@ -176,7 +182,6 @@ const Dashboard = ({ user, socket, setUser }) => {
     },
   };
 
-  // DONUT CHART — MATCHES TICKETTABLE PRIORITY COLORS
   const donutData = {
     labels: ['High', 'Medium', 'Low'],
     datasets: [{
@@ -185,11 +190,7 @@ const Dashboard = ({ user, socket, setUser }) => {
         tickets.filter(t => t.priority === 'medium').length,
         tickets.filter(t => t.priority === 'low').length
       ],
-      backgroundColor: [
-        '#7b1fa2',  // High → Deep Purple
-        '#1976d2',  // Medium → MUI Blue
-        '#43a047'   // Low → Sea Green
-      ],
+      backgroundColor: ['#7b1fa2', '#1976d2', '#43a047'],
       borderColor: '#fff',
       borderWidth: 2,
       hoverOffset: 8,
@@ -203,6 +204,7 @@ const Dashboard = ({ user, socket, setUser }) => {
     plugins: { legend: { display: false } },
   };
 
+  /* ---------- RENDER ---------- */
   return (
     <>
       <AnimatedBackground />
@@ -211,8 +213,8 @@ const Dashboard = ({ user, socket, setUser }) => {
           NRZ Helpdesk Dashboard
         </Typography>
 
-        {/* STATS */}
-        <Grid container spacing={3} sx={{ mb: 6, justifyContent: 'center', alignItems: 'center' }}>
+        {/* STAT CARDS */}
+        <Grid container spacing={3} sx={{ mb: 6, justifyContent: 'center' }}>
           <Grid item xs={12} sm={6} md={3}>
             <ExecutiveStatCard title="Total Tickets" value={stats.total} subtitle="All time" color="#4dabf7" />
           </Grid>
@@ -230,37 +232,44 @@ const Dashboard = ({ user, socket, setUser }) => {
         {/* CHARTS */}
         <Grid container spacing={4} sx={{ mb: 6, justifyContent: 'center' }}>
           <Grid item xs={12} lg={8} sx={{ display: 'flex', justifyContent: 'center' }}>
-            <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', height: 400, width: '100%', maxWidth: '600px', background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#2c3e50', textAlign: 'center' }}>Ticket Status</Typography>
+            <Paper sx={{
+              p: 3, borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+              height: 400, width: '100%', maxWidth: '600px',
+              background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center'
+            }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#2c3e50' }}>Ticket Status</Typography>
               <Bar data={barData} options={barOptions} />
             </Paper>
           </Grid>
+
           <Grid item xs={12} lg={4} sx={{ display: 'flex', justifyContent: 'center' }}>
-            <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', height: 400, width: '100%', maxWidth: '400px', background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, textAlign: 'center', color: '#2c3e50' }}>Priority</Typography>
+            <Paper sx={{
+              p: 3, borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+              height: 400, width: '100%', maxWidth: '400px',
+              background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center'
+            }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: '#2c3e50' }}>Priority</Typography>
               <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
                 <Doughnut data={donutData} options={donutOptions} />
                 <Box sx={{ display: 'flex', justifyContent: 'center', position: 'absolute', bottom: 10, left: 0, right: 0 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-                    <Box sx={{ width: 20, height: 20, backgroundColor: '#7b1fa2', borderRadius: '50%', mr: 1 }} />
-                    <Typography variant="body2">High</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-                    <Box sx={{ width: 20, height: 20, backgroundColor: '#1976d2', borderRadius: '50%', mr: 1 }} />
-                    <Typography variant="body2">Medium</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Box sx={{ width: 20, height: 20, backgroundColor: '#43a047', borderRadius: '50%', mr: 1 }} />
-                    <Typography variant="body2">Low</Typography>
-                  </Box>
+                  {['High', 'Medium', 'Low'].map((lbl, i) => (
+                    <Box key={lbl} sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+                      <Box sx={{ width: 20, height: 20, backgroundColor: donutData.datasets[0].backgroundColor[i], borderRadius: '50%', mr: 1 }} />
+                      <Typography variant="body2">{lbl}</Typography>
+                    </Box>
+                  ))}
                 </Box>
               </Box>
             </Paper>
           </Grid>
         </Grid>
 
+        {/* TICKET TABLE */}
         <TicketTable tickets={tickets} user={user} setTickets={setTickets} socket={socket} />
 
+        {/* SNACKBAR */}
         <Snackbar
           open={snackbar.open}
           autoHideDuration={3000}
