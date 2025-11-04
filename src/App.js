@@ -1,4 +1,4 @@
-/ src/App.js
+// src/App.js
 import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
@@ -43,7 +43,7 @@ function AppContent() {
         />
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* PROTECTED ROUTES — NO PROPS NEEDED */}
+        {/* PROTECTED ROUTES */}
         <Route
           path="/home"
           element={
