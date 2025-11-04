@@ -9,6 +9,7 @@ import {
   Typography,
   Paper,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -17,13 +18,15 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const { login } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // CRITICAL
     setError('');
+    setLoading(true);
 
     try {
       await login(email, password);
@@ -32,6 +35,8 @@ const Login = () => {
     } catch (err) {
       setError(err.message || 'Login failed');
       toast.error('Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,9 +55,13 @@ const Login = () => {
           NRZ Helpdesk
         </Typography>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-        <form onSubmit={handleSubmit}>
+        <Box component="form" onSubmit={handleSubmit} noValidate>
           <TextField
             fullWidth
             label="Email"
@@ -61,7 +70,8 @@ const Login = () => {
             onChange={(e) => setEmail(e.target.value)}
             margin="normal"
             required
-            placeholder="frubengo@nrz.co.za"
+            placeholder="bsmith@nrz.co.za"
+            disabled={loading}
           />
           <TextField
             fullWidth
@@ -71,17 +81,19 @@ const Login = () => {
             onChange={(e) => setPassword(e.target.value)}
             margin="normal"
             required
+            disabled={loading}
           />
           <Button
             type="submit"
             fullWidth
             variant="contained"
             size="large"
-            sx={{ mt: 3 }}
+            sx={{ mt: 3, py: 1.5 }}
+            disabled={loading}
           >
-            Login
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Login'}
           </Button>
-        </form>
+        </Box>
       </Paper>
 
       <ToastContainer position="top-right" autoClose={3000} />
