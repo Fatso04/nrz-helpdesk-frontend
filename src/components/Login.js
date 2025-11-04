@@ -47,10 +47,7 @@ const Login = ({ setUser }) => {
 
   try {
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-    const res = await axios.post(`${API_URL}/api/auth/support-login`, {
-      email,
-      password,
-    });
+    const res = await login(email, password);
 
     const userData = {
       _id: res.data._id,
