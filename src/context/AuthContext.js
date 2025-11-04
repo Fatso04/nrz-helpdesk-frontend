@@ -1,15 +1,16 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { io } from 'socket.io-client';
 
 export const AuthContext = createContext();
 
-// === FULL RENDER BACKEND URL (FROM .env) ===
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const API = `${API_BASE}/api/auth`;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [socket, setSocket] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,6 +18,23 @@ export const AuthProvider = ({ children }) => {
     if (saved) {
       const parsed = JSON.parse(saved);
       setUser(parsed);
+
+      // Connect Socket.IO
+      const newSocket = io(API_BASE, {
+        auth: { token: parsed.token },
+        transports: ['websocket'],
+      });
+
+      newSocket.on('connect', () => {
+        console.log('Socket connected:', newSocket.id);
+      });
+
+      newSocket.on('update', (data) => {
+        console.log('Live update:', data);
+        // You can trigger UI updates here
+      });
+
+      setSocket(newSocket);
     }
     setLoading(false);
   }, []);
@@ -25,8 +43,17 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await axios.post(`${API}/login`, { email, password });
       const userData = res.data;
+
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
+
+      // Connect socket after login
+      const newSocket = io(API_BASE, {
+        auth: { token: userData.token },
+        transports: ['websocket'],
+      });
+      setSocket(newSocket);
+
       return userData;
     } catch (err) {
       throw new Error(err.response?.data?.message || 'Login failed');
@@ -47,10 +74,14 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('user');
     setUser(null);
+    if (socket) {
+      socket.disconnect();
+      setSocket(null);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, setUser, socket, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
