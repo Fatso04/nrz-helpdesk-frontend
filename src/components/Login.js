@@ -2,6 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';                     // <-- configured axios
+
+
+
+import axios from 'axios'; // ← ADD
+
+
 import {
   Box,
   Button,
