@@ -1,4 +1,4 @@
-// src/App.js
+/ src/App.js
 import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
@@ -20,7 +20,14 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '50px', fontSize: '18px' }}>
+      <div
+        style={{
+          textAlign: 'center',
+          padding: '50px',
+          fontSize: '18px',
+          color: '#555',
+        }}
+      >
         Loading...
       </div>
     );
@@ -29,20 +36,20 @@ function AppContent() {
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
+        {/* PUBLIC ROUTES */}
         <Route
           path="/login"
           element={user ? <Navigate to="/home" replace /> : <Login />}
         />
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Protected Routes */}
+        {/* PROTECTED ROUTES — NO PROPS NEEDED */}
         <Route
           path="/home"
           element={
             user ? (
               <Layout>
-                <Home user={user} />
+                <Home />
               </Layout>
             ) : (
               <Navigate to="/login" replace />
@@ -55,7 +62,7 @@ function AppContent() {
           element={
             user ? (
               <Layout>
-                <Dashboard user={user} />
+                <Dashboard />
               </Layout>
             ) : (
               <Navigate to="/login" replace />
@@ -66,7 +73,7 @@ function AppContent() {
         <Route
           path="/register"
           element={
-            user && user.role === 'admin' ? (
+            user?.role === 'admin' ? (
               <Layout>
                 <RegisterPage />
               </Layout>
@@ -94,7 +101,7 @@ function AppContent() {
           element={
             user ? (
               <Layout>
-                <TicketDetails user={user} />
+                <TicketDetails />
               </Layout>
             ) : (
               <Navigate to="/login" replace />
@@ -107,7 +114,7 @@ function AppContent() {
           element={
             user ? (
               <Layout>
-                <TicketEdit user={user} />
+                <TicketEdit />
               </Layout>
             ) : (
               <Navigate to="/login" replace />
@@ -115,7 +122,7 @@ function AppContent() {
           }
         />
 
-        {/* Catch-all */}
+        {/* CATCH-ALL */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
