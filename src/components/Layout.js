@@ -1,5 +1,5 @@
 // src/components/Layout.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { styled } from '@mui/material/styles';
 import PersonAdd from '@mui/icons-material/PersonAdd';
 import AddCircle from '@mui/icons-material/AddCircle';
@@ -14,7 +14,7 @@ import {
   Drawer,
   List,
   ListItem,
-  ListItemButton,     // ← ADDED
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   Divider,
@@ -27,6 +27,7 @@ import {
   Dashboard as DashboardIcon,
   Menu as MenuIcon,
 } from '@mui/icons-material';
+import { AuthContext } from '../context/AuthContext';
 
 const AnimatedBg = styled(Box)(({ theme }) => ({
   minHeight: '100vh',
@@ -51,22 +52,15 @@ const Logo = styled('img')({
   objectFit: 'contain',
 });
 
-const Layout = ({ user, setUser, darkMode, setDarkMode, children }) => {
+const Layout = ({ children }) => {
+  const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  useEffect(() => {
-    if (!user?.token) {
-      localStorage.removeItem('user');
-      setUser(null);
-      navigate('/login');
-    }
-  }, [user, navigate, setUser]);
+  const [darkMode, setDarkMode] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
+    logout();
     navigate('/login');
   };
 
@@ -83,28 +77,25 @@ const Layout = ({ user, setUser, darkMode, setDarkMode, children }) => {
       <List>
 
         <ListItem disablePadding>
-  <ListItemButton component={Link} to="/create-ticket">
-    <ListItemIcon>
-      <AddCircle />
-    </ListItemIcon>
-    <ListItemText primary="Create Ticket" />
-  </ListItemButton>
-</ListItem>
+          <ListItemButton component={Link} to="/create-ticket">
+            <ListItemIcon>
+              <AddCircle />
+            </ListItemIcon>
+            <ListItemText primary="Create Ticket" />
+          </ListItemButton>
+        </ListItem>
 
-        {user.role === 'admin' && (
-  <ListItem disablePadding>
-    <ListItemButton component={Link} to="/register">
-      <ListItemIcon>
-        <PersonAdd />
-      </ListItemIcon>
-      <ListItemText primary="Register User" />
-    </ListItemButton>
-  </ListItem>
-)}
+        {user?.role === 'admin' && (
+          <ListItem disablePadding>
+            <ListItemButton component={Link} to="/register">
+              <ListItemIcon>
+                <PersonAdd />
+              </ListItemIcon>
+              <ListItemText primary="Register User" />
+            </ListItemButton>
+          </ListItem>
+        )}
 
-
-
-        {/* DASHBOARD */}
         <ListItem disablePadding>
           <ListItemButton
             component={Link}
@@ -112,8 +103,8 @@ const Layout = ({ user, setUser, darkMode, setDarkMode, children }) => {
             sx={{
               borderRadius: 1,
               cursor: 'pointer',
-              bgcolor: location.pathname === '/dashboard' 
-                ? (darkMode ? 'grey.800' : 'primary.light') 
+              bgcolor: location.pathname === '/dashboard'
+                ? (darkMode ? 'grey.800' : 'primary.light')
                 : 'transparent',
               '&:hover': {
                 bgcolor: darkMode ? 'grey.700' : 'grey.100',
@@ -125,20 +116,19 @@ const Layout = ({ user, setUser, darkMode, setDarkMode, children }) => {
             <ListItemIcon sx={{ color: darkMode ? 'grey.200' : 'primary.main' }}>
               <DashboardIcon />
             </ListItemIcon>
-            <ListItemText 
-              primary="Dashboard" 
-              sx={{ color: darkMode ? 'grey.200' : 'text.primary' }} 
+            <ListItemText
+              primary="Dashboard"
+              sx={{ color: darkMode ? 'grey.200' : 'text.primary' }}
             />
           </ListItemButton>
         </ListItem>
 
-        {/* LOGOUT — FINGER POINTER */}
         <ListItem disablePadding>
           <ListItemButton
             onClick={handleLogout}
             sx={{
               borderRadius: 1,
-              cursor: 'pointer', // FINGER POINTER
+              cursor: 'pointer',
               '&:hover': {
                 bgcolor: darkMode ? 'grey.700' : 'grey.100',
                 transform: 'translateX(4px)',
@@ -149,9 +139,9 @@ const Layout = ({ user, setUser, darkMode, setDarkMode, children }) => {
             <ListItemIcon sx={{ color: darkMode ? 'grey.200' : 'primary.main' }}>
               <Logout />
             </ListItemIcon>
-            <ListItemText 
-              primary="Logout" 
-              sx={{ color: darkMode ? 'grey.200' : 'text.primary' }} 
+            <ListItemText
+              primary="Logout"
+              sx={{ color: darkMode ? 'grey.200' : 'text.primary' }}
             />
           </ListItemButton>
         </ListItem>
@@ -188,7 +178,7 @@ const Layout = ({ user, setUser, darkMode, setDarkMode, children }) => {
             NRZ Helpdesk
           </Typography>
           <Typography variant="body1" sx={{ mr: 2, fontWeight: 500 }}>
-            {user?.name} ({user?.role})
+            {user?.name} ({user?.role || 'user'})
           </Typography>
           <Tooltip title={darkMode ? 'Light Mode' : 'Dark Mode'}>
             <IconButton onClick={() => setDarkMode(!darkMode)} color="inherit">
@@ -207,7 +197,6 @@ const Layout = ({ user, setUser, darkMode, setDarkMode, children }) => {
       </AppBar>
 
       <Box component="nav" sx={{ width: { sm: 240 }, flexShrink: { sm: 0 } }}>
-        {/* Mobile Drawer */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -226,7 +215,6 @@ const Layout = ({ user, setUser, darkMode, setDarkMode, children }) => {
           {drawerContent}
         </Drawer>
 
-        {/* Desktop Drawer */}
         <Drawer
           variant="permanent"
           sx={{
