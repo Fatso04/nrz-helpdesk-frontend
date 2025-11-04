@@ -1,7 +1,7 @@
 // src/pages/CreateTicketPage.js
-import React, { useContext, useState } from 'react';
-import { AuthContext } from '../context/AuthContext';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import {
   Container,
@@ -35,14 +35,24 @@ const CreateTicketPage = () => {
     setError('');
 
     try {
-      await axios.post(
-        'http://localhost:5000/api/tickets',
+      const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const res = await axios.post(
+        `${API_BASE}/api/tickets`,
         form,
-        { headers: { Authorization: `Bearer ${user.token}` } }
+        {
+          headers: {
+            'Authorization': `Bearer ${user.token}`,
+            'Content-Type': 'application/json',
+          },
+        }
       );
-      alert('Ticket created successfully!');
-      navigate('/dashboard');
+
+      if (res.status === 201) {
+        alert('Ticket created successfully!');
+        navigate('/dashboard');
+      }
     } catch (err) {
+      console.error('Create ticket error:', err);
       setError(err.response?.data?.message || 'Failed to create ticket');
     } finally {
       setLoading(false);
@@ -56,7 +66,11 @@ const CreateTicketPage = () => {
           Create New Ticket
         </Typography>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
@@ -74,7 +88,7 @@ const CreateTicketPage = () => {
             required
             fullWidth
             multiline
-            rows={5}
+            rows={4}
           />
 
           <FormControl fullWidth>
@@ -98,7 +112,7 @@ const CreateTicketPage = () => {
             fullWidth
             sx={{ mt: 2 }}
           >
-            {loading ? <CircularProgress size={24} /> : 'CREATE TICKET'}
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'CREATE TICKET'}
           </Button>
         </Box>
       </Paper>
