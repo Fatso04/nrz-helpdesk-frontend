@@ -11,7 +11,6 @@ import Layout from './components/Layout';
 import TicketDetails from './components/TicketDetails';
 import TicketEdit from './pages/TicketEdit';
 import Dashboard from './components/Dashboard';
-import SupportDashboard from './components/SupportDashboard';
 
 function App() {
   const [user, setUser] = useState(null);
